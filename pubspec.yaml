@@ -1,0 +1,17 @@
+name: ftxgridbot
+description: A sample command-line application.
+# version: 1.0.0
+# homepage: https://www.example.com
+
+environment:
+  sdk: '>=2.9.3 <3.0.0'
+
+dependencies:
+  path: ^1.7.0
+  teledart: ^0.0.50
+  dotenv: ^2.0.0
+  web_socket_channel: ^1.1.0
+  random_string: ^2.1.0
+  dio: ^3.0.10
+  decimal: ^0.3.0
+  pausable_timer: ^0.1.0+2
