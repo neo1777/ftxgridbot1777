@@ -16,7 +16,7 @@
 Add more general information about project. What the purpose of the project is? Motivation?
 
 ## Screenshots
-![Example screenshot](./img/screenshot.png)
+![Example screenshot](./img/vlcsnap-2020-12-09-14h29m38s750.png)
 
 ## Technologies
 * Tech 1 - version 1.0
