@@ -47,8 +47,8 @@ Project is: _in progress_, _finished_, _no longer continue_ and why?
 Add here credits. Project inspired by..., based on...
 
 ## Contact
-telegram: [@neo_1777](https://t.me/neo_1777)
-mail: banner@nicolainformatica.it
-web: https://nicolainformatica.it
+* telegram: [@neo_1777](https://t.me/neo_1777)
+* mail: banner@nicolainformatica.it
+* web: https://nicolainformatica.it
 
 Created by [Neo1777] - feel free to contact me!
