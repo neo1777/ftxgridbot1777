@@ -84,3 +84,13 @@ Future<Map> prep_list_orderLimit(Decimal increment) async {
   }
   return map;
 }
+
+Future<void> handleError_1(e, s, String txt, other, {txt2}) async {
+  //print('HANDLE ERROR ftx_function ${txt.toUpperCase()}');
+  print('ERROR: ${e.toString()}');
+  print('REQUEST: ${other}');
+  //print('ENDPOINT: ${txt2}');
+  //print('STACK TRACE: ${s.toString()}');
+  //await Future<void>.delayed(Duration(milliseconds: 1000));
+  //run();
+}

@@ -66,7 +66,7 @@ class ApiProvide {
     if (account != 'NO') {
       opt_headers['FTX-SUBACCOUNT'] = account;
     }
-    await dio
+    final response = await dio
         .get('${url}/${endpoint}',
             queryParameters: data,
             options: Options(
@@ -77,6 +77,8 @@ class ApiProvide {
             s,
             ' ftx_Get_Auth ${url}/${endpoint}',
             'funzione ftx_Get_Auth - sezione dio.get'));
+
+    return response;
   }
 
   Future ftx_Get_Auth_spot(String url, String endpoint) async {

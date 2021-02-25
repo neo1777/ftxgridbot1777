@@ -92,8 +92,8 @@ class Historical {
   bool success;
 
   factory Historical.fromMap(Map<String, dynamic> json) => Historical(
-        result_h: List<Result_h>.from(
-            json['result_h'].map((x) => Result_h.fromMap(x))),
+        result_h:
+            List<Result_h>.from(json['result'].map((x) => Result_h.fromMap(x))),
         success: json['success'],
       );
 
@@ -162,7 +162,7 @@ class GetMarketCross {
   bool success;
 
   factory GetMarketCross.fromMap(Map<String, dynamic> json) => GetMarketCross(
-        result_m: Result_m.fromMap(json['result_m']),
+        result_m: Result_m.fromMap(json['result']),
         success: json['success'],
       );
 
