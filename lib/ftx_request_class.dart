@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
+import 'package:dotenv/dotenv.dart' show env;
 import 'package:dio/dio.dart';
-import 'package:dotenv/dotenv.dart';
-import 'package:crypto/crypto.dart';
 import 'package:web_socket_channel/io.dart';
+import 'package:crypto/crypto.dart';
 
 class ApiProvide {
   var account = env['subaccount'];
@@ -12,11 +14,13 @@ class ApiProvide {
 
   Future<Stream> ftx_WebSocket(String uri, String symbol,
       {List channel}) async {
+    //var ping_int = Duration(seconds: 15);
     var time = DateTime.now().toUtc().millisecondsSinceEpoch;
     var messageNotencode = '${time}websocket_login';
     var data_auth = {
       'key': env['API_ftx'],
       'sign': await function_sha(messageNotencode),
+      //'subaccount': account,
       'time': time
     };
     if (account != 'NO') {
@@ -24,10 +28,8 @@ class ApiProvide {
     }
     var data_ftx = {'op': 'login', 'args': data_auth};
     channelMaster_Ftx = await IOWebSocketChannel.connect(uri);
-    streamBroadcast_Ftx = await channelMaster_Ftx.stream
-        .asBroadcastStream()
-        .handleError((e, s) => handleError(e, s, 'streamBroadcast_Ftx',
-            'funzione ftx_WebSocket - sezione channelMaster_Ftx.stream'));
+    streamBroadcast_Ftx =
+        await channelMaster_Ftx.stream.asBroadcastStream().handleError(onError);
     channelMaster_Ftx.sink.add(json.encode(data_ftx));
     if (channel != null) {
       channel.forEach((v) {
@@ -39,24 +41,32 @@ class ApiProvide {
   }
 
   Future<Response> ftx_Get(String url, String endpoint) async {
-    final response = await dio.get('${url}/${endpoint}').catchError((e, s) =>
-        handleError(
-            e, s, '${url}/${endpoint}', 'funzione ftx_Get - sezione dio.get'));
+    final response = await dio.get('${url}/${endpoint}').catchError((e) {
+      print('errore ftx_Get: $e');
+    });
     return response;
   }
 
   Future ftx_Get_Auth(String url, String endpoint, {Map data}) async {
     final time = DateTime.now().toUtc().millisecondsSinceEpoch;
     var messageNotencode = '${time}GET/api/${endpoint}';
+    //var messageNotencode = '1611620261000GET/api/${endpoint}';
     if (data != null) {
       messageNotencode += '?';
       var n = 0;
       data.forEach((k, v) {
         n = n + 1;
         messageNotencode += '${k}=${v}';
+        /*if (n < data.length) {
+          messageNotencode += '&';
+          print('messageNotencode <&>: ${messageNotencode}');
+        }*/
       });
+      //messageNotencode += '%!';
     }
+    //print('message: ${messageNotencode}');
     final messageEncode = await function_sha(messageNotencode);
+    //print('messageEncode: ${messageEncode}');
     final opt_headers = {
       'Content-Type': 'application/json',
       'FTX-KEY': env['API_ftx'],
@@ -66,17 +76,16 @@ class ApiProvide {
     if (account != 'NO') {
       opt_headers['FTX-SUBACCOUNT'] = account;
     }
-    final response = await dio
+    //print('headers: ${opt_headers}');
+    var response = await dio
         .get('${url}/${endpoint}',
             queryParameters: data,
             options: Options(
               headers: opt_headers,
             ))
-        .catchError((e, s) => handleError(
-            e,
-            s,
-            ' ftx_Get_Auth ${url}/${endpoint}',
-            'funzione ftx_Get_Auth - sezione dio.get'));
+        .catchError((e) {
+      print('errore ftx_Get_Auth: $e');
+    });
 
     return response;
   }
@@ -84,7 +93,10 @@ class ApiProvide {
   Future ftx_Get_Auth_spot(String url, String endpoint) async {
     final time = DateTime.now().toUtc().millisecondsSinceEpoch;
     var messageNotencode = '${time}GET/api/${endpoint}';
+    //var messageNotencode = '1611620261000GET/api/${endpoint}';
+    //print('message: ${messageNotencode}');
     final messageEncode = await function_sha(messageNotencode);
+    //print('messageEncode: ${messageEncode}');
     final opt_headers = {
       'Content-Type': 'application/json',
       'FTX-KEY': env['API_ftx'],
@@ -94,15 +106,20 @@ class ApiProvide {
     if (account != 'NO') {
       opt_headers['FTX-SUBACCOUNT'] = account;
     }
+    //print('headers: ${opt_headers}');
+    //var data_open_orders = {'market': '${env['Cross_ftx']}'};
     var response;
     response = await dio
         .get('${url}/${endpoint}',
+            //queryParameters: data_open_orders,
             options: Options(
               headers: opt_headers,
             ))
-        .catchError((e, s) => handleError(e, s, ' ftx_Get_Auth_spot',
-            'funzione ftx_Get_Auth_spot - sezione dio.get'));
+        .catchError((e) {
+      print('errore ftx_Get_Auth_spot: $e');
+    });
 
+    //print('response: ${response}');
     return response;
   }
 
@@ -117,6 +134,7 @@ class ApiProvide {
       'FTX-KEY': env['API_ftx'],
       'FTX-SIGN': messageEncode,
       'FTX-TS': time.toString(),
+      //'FTX-SUBACCOUNT': account,
     };
     if (account != 'NO') {
       opt_headers['FTX-SUBACCOUNT'] = account;
@@ -128,8 +146,15 @@ class ApiProvide {
             options: Options(
               headers: opt_headers,
             ))
-        .catchError((e, s) => handleError(e, s, data.toString(),
-            'funzione ftx_Post_Auth - sezione dio.post'));
+        .catchError((e) {
+      print('errore ftx_Post_Auth: $e');
+      print('errore data: $data');
+      print('errore opt_headers: $opt_headers');
+    });
+    //print('data: ${data}');
+    //print('opt_headers: $opt_headers');
+
+    //print(DateTime.now().toUtc());
   }
 
   Future ftx_Del_Auth(String url, String endpoint, {Map data}) async {
@@ -145,8 +170,10 @@ class ApiProvide {
           messageNotencode += '&';
         }
       });
+      //messageNotencode += '?market=${data['market']}';
     }
     var messageEncode = await function_sha(messageNotencode);
+    //print(messageEncode);
     var opt_headers = {
       'FTX-KEY': env['API_ftx'],
       'FTX-SIGN': messageEncode,
@@ -156,11 +183,15 @@ class ApiProvide {
     if (account != 'NO') {
       opt_headers['FTX-SUBACCOUNT'] = account;
     }
+
+    //var options = Options(contentType: 'application/json');
     await dio.delete('${url}/${endpoint}',
         queryParameters: data,
         options: Options(
           headers: opt_headers,
         ));
+    //.catchError((e, s) =>
+    //handleError(e, s, 'DELETE', data, txt2: '${url}/${endpoint}'));
   }
 
   Future<String> function_sha(String messageNotencode) async {
@@ -170,9 +201,7 @@ class ApiProvide {
     return digest.toString();
   }
 
-  Future<void> handleError(e, s, String txt, other, {txt2}) async {
-    print('ERROR: ${e.toString()}');
-    print('REQUEST: ${txt}');
-    print('Start point: ${other}\n');
+  void onError(e, String txt_error) {
+    print('error: $e');
   }
 }
