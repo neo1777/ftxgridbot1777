@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:ftxgridbot/class_ftx.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 
-var versione = 'v8.05';
+var versione = 'v8.06';
 var open_sell = true;
 var open_buy = true;
 void main(List<String> args) async {
@@ -228,13 +228,17 @@ Future funzione_market(ApiProvide ftxApi, PrimitiveWrapper data) async {
   }
   var market_single =
       await ftxApi.ftx_Get(env['URL_ftx'], 'markets/${env['Cross_ftx']}');
-  final market = welcomeFromMap(json.encode(market_single.data));
-  data.ask_start = market.result.ask;
-  data.bid_start = market.result.bid;
-  //print('last price: ${market.result.price} ${data.last_start}');
-  if (data.last_start != market.result.price) {
-    //print('\nCHANGE!! last price: ${market.result.price} ${data.last_start}');
-    await add_list_orders_limit(ftxApi, market.result.price, data);
+  if (market_single == null) {
+    await Future<void>.delayed(Duration(milliseconds: 100));
+  } else {
+    final market = welcomeFromMap(json.encode(market_single.data));
+    data.ask_start = market.result.ask;
+    data.bid_start = market.result.bid;
+    //print('last price: ${market.result.price} ${data.last_start}');
+    if (data.last_start != market.result.price) {
+      //print('\nCHANGE!! last price: ${market.result.price} ${data.last_start}');
+      await add_list_orders_limit(ftxApi, market.result.price, data);
+    }
   }
   //await sync_exec(ftxApi, data);
 }
