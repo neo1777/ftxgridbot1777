@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:ftxgridbot/class_ftx.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 
-var versione = 'v8.04';
+var versione = 'v8.05';
 var open_sell = true;
 var open_buy = true;
 void main(List<String> args) async {
@@ -171,58 +171,61 @@ Future funzione_market(ApiProvide ftxApi, PrimitiveWrapper data) async {
   var i = 0;
   var wallet_balances =
       await ftxApi.ftx_Get_Auth(env['URL_ftx'], 'wallet/balances');
-  while (i < wallet_balances.data['result'].length) {
-    //print(
-    //'💰 bilancio: ${wallet_balances.data['result'][i]['total']} ${wallet_balances.data['result'][i]['coin']}\n');
+  if (wallet_balances == null) {
+    await Future<void>.delayed(Duration(milliseconds: 100));
+  } else {
+    while (i < wallet_balances.data['result'].length) {
+      //print(
+      //'💰 bilancio: ${wallet_balances.data['result'][i]['total']} ${wallet_balances.data['result'][i]['coin']}\n');
 
-    if (env['Cross_ftx'].split('/')[0] ==
-        wallet_balances.data['result'][i]['coin']) {
-      //print('Coin 0: ${wallet_balances.data['result'][i]['coin']}');
-      if (wallet_balances.data['result'][i]['free'] <
-          data.size_sell.toDouble()) {
-        if (open_sell) {
-          print('Collaterale insufficiente (sell)');
-          print(
-              'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
-          print(
-              'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
-          print('size: ${data.size_sell}');
-          print('index 0');
+      if (env['Cross_ftx'].split('/')[0] ==
+          wallet_balances.data['result'][i]['coin']) {
+        //print('Coin 0: ${wallet_balances.data['result'][i]['coin']}');
+        if (wallet_balances.data['result'][i]['free'] <
+            data.size_sell.toDouble()) {
+          if (open_sell) {
+            print('Collaterale insufficiente (sell)');
+            print(
+                'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
+            print(
+                'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
+            print('size: ${data.size_sell}');
+            print('index 0');
+          }
+          open_sell = false;
+        } else {
+          if (!open_sell) {
+            print('Collaterale ripristinato (sell)');
+          }
+          open_sell = true;
         }
-        open_sell = false;
-      } else {
-        if (!open_sell) {
-          print('Collaterale ripristinato (sell)');
-        }
-        open_sell = true;
       }
-    }
-    if (env['Cross_ftx'].split('/')[1] ==
-        wallet_balances.data['result'][i]['coin']) {
-      //print('Coin 1: ${wallet_balances.data['result'][i]['coin']}');
-      if (wallet_balances.data['result'][i]['free'] <
-          data.size_buy.toDouble()) {
-        if (open_buy) {
-          print('Collaterale insufficiente (buy)');
-          print(
-              'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
-          print(
-              'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
-          print('size: ${data.size_buy}');
-          print('index 1');
+      if (env['Cross_ftx'].split('/')[1] ==
+          wallet_balances.data['result'][i]['coin']) {
+        //print('Coin 1: ${wallet_balances.data['result'][i]['coin']}');
+        if (wallet_balances.data['result'][i]['free'] <
+            data.size_buy.toDouble()) {
+          if (open_buy) {
+            print('Collaterale insufficiente (buy)');
+            print(
+                'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
+            print(
+                'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
+            print('size: ${data.size_buy}');
+            print('index 1');
+          }
+          open_buy = false;
+        } else {
+          if (!open_buy) {
+            print('Collaterale ripristinato (buy)');
+          }
+          open_buy = true;
         }
-        open_buy = false;
-      } else {
-        if (!open_buy) {
-          print('Collaterale ripristinato (buy)');
-        }
-        open_buy = true;
       }
-    }
 
-    i++;
+      i++;
+    }
   }
-
   var market_single =
       await ftxApi.ftx_Get(env['URL_ftx'], 'markets/${env['Cross_ftx']}');
   final market = welcomeFromMap(json.encode(market_single.data));
