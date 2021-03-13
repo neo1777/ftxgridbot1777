@@ -337,9 +337,10 @@ Future add_list_orders_limit(
 
   if (data.open_orders == null) {
     //print('data.open_orders is NULL');
-    await Future<void>.delayed(Duration(milliseconds: 100));
-    cancel_limit_start(ftxApi, data);
-    await Future<void>.delayed(Duration(milliseconds: 100));
+    await Future<void>.delayed(Duration(milliseconds: 150));
+    //cancel_limit_start(ftxApi, data);
+    sync_exec(ftxApi, data);
+    await Future<void>.delayed(Duration(milliseconds: 150));
   } else if (data.open_orders.data['result'].length ==
       data.list_orders_exec.length) {
     data.last_start = price_start;
