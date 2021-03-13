@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:ftxgridbot/class_ftx.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 
-var versione = 'v8.06';
+var versione = 'v8.07';
 var open_sell = true;
 var open_buy = true;
 void main(List<String> args) async {
@@ -337,9 +337,8 @@ Future add_list_orders_limit(
 
   if (data.open_orders == null) {
     print('data.open_orders is NULL');
-  }
-
-  if (data.open_orders.data['result'].length == data.list_orders_exec.length) {
+  } else if (data.open_orders.data['result'].length ==
+      data.list_orders_exec.length) {
     data.last_start = price_start;
   }
 }
