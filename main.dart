@@ -336,7 +336,10 @@ Future add_list_orders_limit(
   //await sync_exec(ftxApi, data);
 
   if (data.open_orders == null) {
-    print('data.open_orders is NULL');
+    //print('data.open_orders is NULL');
+    await Future<void>.delayed(Duration(milliseconds: 100));
+    cancel_limit_start(ftxApi, data);
+    await Future<void>.delayed(Duration(milliseconds: 100));
   } else if (data.open_orders.data['result'].length ==
       data.list_orders_exec.length) {
     data.last_start = price_start;
@@ -751,6 +754,22 @@ class Result_h {
         'time': time,
         'volume': volume,
       };
+}
+
+void cancel_limit_start(ApiProvide ftxApi, PrimitiveWrapper data) async {
+  var data_open_orders = {'market': '${env['Cross_ftx']}'};
+  data.open_orders = await ftxApi
+      .ftx_Get_Auth(env['URL_ftx'], 'orders', data: data_open_orders)
+      .catchError(onError);
+  for (var i = 0; i < data.open_orders.data['result'].length; i++) {
+    //print('item order ${data.open_orders.data['result'][i]}');
+    if (data.open_orders.data['result'][i]['type'] == 'limit') {
+      await ftxApi
+          .ftx_Del_Auth(env['URL_ftx'],
+              'orders/${data.open_orders.data['result'][i]['id']}')
+          .catchError(onError);
+    }
+  }
 }
 
 void onError(e, String txt_error) {
