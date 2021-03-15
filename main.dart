@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:ftxgridbot/class_ftx.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 
-var versione = 'v8.07';
+var versione = 'v8.08';
 var open_sell = true;
 var open_buy = true;
 void main(List<String> args) async {
@@ -169,61 +169,88 @@ Future funzione_market_init(ApiProvide ftxApi, PrimitiveWrapper data) async {
 
 Future funzione_market(ApiProvide ftxApi, PrimitiveWrapper data) async {
   var i = 0;
+  var coin0 = '';
+  var coin1 = '';
+  var open_future = true;
+  var account_info =
+      await ftxApi.ftx_Get_Auth(env['URL_ftx'], 'account').catchError(onError);
   var wallet_balances =
       await ftxApi.ftx_Get_Auth(env['URL_ftx'], 'wallet/balances');
-  if (wallet_balances == null) {
-    await Future<void>.delayed(Duration(milliseconds: 100));
+
+  if (!env['Cross_ftx'].contains('/')) {
+    print('Future : ${account_info.data['result']['freeCollateral']}');
+
+    if ((account_info.data['result']['freeCollateral'] <
+            data.size_sell.toDouble()) ||
+        (account_info.data['result']['freeCollateral'] <
+            data.size_buy.toDouble())) {
+      if (open_future) {
+        print('Collaterale insufficiente');
+      }
+      open_future = false;
+      open_sell = false;
+      open_buy = false;
+    } else {
+      if (!open_future) {
+        print('Collaterale ripristinato');
+      }
+      open_future = true;
+      open_sell = true;
+      open_buy = true;
+    }
   } else {
-    while (i < wallet_balances.data['result'].length) {
-      //print(
-      //'💰 bilancio: ${wallet_balances.data['result'][i]['total']} ${wallet_balances.data['result'][i]['coin']}\n');
-
-      if (env['Cross_ftx'].split('/')[0] ==
-          wallet_balances.data['result'][i]['coin']) {
-        //print('Coin 0: ${wallet_balances.data['result'][i]['coin']}');
-        if (wallet_balances.data['result'][i]['free'] <
-            data.size_sell.toDouble()) {
-          if (open_sell) {
-            print('Collaterale insufficiente (sell)');
-            print(
-                'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
-            print(
-                'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
-            print('size: ${data.size_sell}');
-            print('index 0');
+    coin0 = env['Cross_ftx'].split('/')[0];
+    coin1 = env['Cross_ftx'].split('/')[1];
+    if (wallet_balances == null) {
+      await Future<void>.delayed(Duration(milliseconds: 100));
+    } else {
+      while (i < wallet_balances.data['result'].length) {
+        if (coin0 == wallet_balances.data['result'][i]['coin']) {
+          //print('Coin 0: ${wallet_balances.data['result'][i]['coin']}');
+          if (wallet_balances.data['result'][i]['free'] <
+              data.size_sell.toDouble()) {
+            if (open_sell) {
+              print('Collaterale insufficiente (sell)');
+              print(
+                  'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
+              print(
+                  'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
+              print('size: ${data.size_sell}');
+              print('index 0');
+            }
+            open_sell = false;
+          } else {
+            if (!open_sell) {
+              print('Collaterale ripristinato (sell)');
+            }
+            open_sell = true;
           }
-          open_sell = false;
-        } else {
-          if (!open_sell) {
-            print('Collaterale ripristinato (sell)');
-          }
-          open_sell = true;
         }
-      }
-      if (env['Cross_ftx'].split('/')[1] ==
-          wallet_balances.data['result'][i]['coin']) {
-        //print('Coin 1: ${wallet_balances.data['result'][i]['coin']}');
-        if (wallet_balances.data['result'][i]['free'] <
-            data.size_buy.toDouble()) {
-          if (open_buy) {
-            print('Collaterale insufficiente (buy)');
-            print(
-                'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
-            print(
-                'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
-            print('size: ${data.size_buy}');
-            print('index 1');
-          }
-          open_buy = false;
-        } else {
-          if (!open_buy) {
-            print('Collaterale ripristinato (buy)');
-          }
-          open_buy = true;
-        }
-      }
 
-      i++;
+        if (coin1 == wallet_balances.data['result'][i]['coin']) {
+          //print('Coin 1: ${wallet_balances.data['result'][i]['coin']}');
+          if (wallet_balances.data['result'][i]['free'] <
+              data.size_buy.toDouble()) {
+            if (open_buy) {
+              print('Collaterale insufficiente (buy)');
+              print(
+                  'Balance ${wallet_balances.data['result'][i]['coin']}: ${wallet_balances.data['result'][i]['total']}');
+              print(
+                  'colaterale libero: ${wallet_balances.data['result'][i]['free']}');
+              print('size: ${data.size_buy}');
+              print('index 1');
+            }
+            open_buy = false;
+          } else {
+            if (!open_buy) {
+              print('Collaterale ripristinato (buy)');
+            }
+            open_buy = true;
+          }
+        }
+
+        i++;
+      }
     }
   }
   var market_single =
@@ -446,7 +473,7 @@ Future<String> get_data_account(ApiProvide ftxApi,
     {PrimitiveWrapper data, String init}) async {
   var account_info =
       await ftxApi.ftx_Get_Auth(env['URL_ftx'], 'account').catchError(onError);
-  print('account_info: ${account_info}');
+  //print('account_info: ${account_info}');
   var pos = 'flat';
   //print('item: ${account_info.data['result']}');
   try {
