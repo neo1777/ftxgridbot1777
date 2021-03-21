@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:ftxgridbot/class_ftx.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 
-var versione = 'v8.08';
+var versione = 'v8.09';
 var open_sell = true;
 var open_buy = true;
 void main(List<String> args) async {
@@ -177,7 +177,7 @@ Future funzione_market(ApiProvide ftxApi, PrimitiveWrapper data) async {
   var wallet_balances =
       await ftxApi.ftx_Get_Auth(env['URL_ftx'], 'wallet/balances');
 
-  if (!env['Cross_ftx'].contains('/')) {
+  if (!env['Cross_ftx'].contains('/') && account_info != null) {
     print('Future : ${account_info.data['result']['freeCollateral']}');
 
     if ((account_info.data['result']['freeCollateral'] <
@@ -198,7 +198,8 @@ Future funzione_market(ApiProvide ftxApi, PrimitiveWrapper data) async {
       open_sell = true;
       open_buy = true;
     }
-  } else {
+  }
+  if (env['Cross_ftx'].contains('/')) {
     coin0 = env['Cross_ftx'].split('/')[0];
     coin1 = env['Cross_ftx'].split('/')[1];
     if (wallet_balances == null) {
