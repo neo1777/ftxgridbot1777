@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:ftxgridbot/class_ftx.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 
-var versione = 'v8.09';
+var versione = 'v8.10';
 var open_sell = true;
 var open_buy = true;
 void main(List<String> args) async {
@@ -81,72 +81,80 @@ Future funzione_market_init(ApiProvide ftxApi, PrimitiveWrapper data) async {
   var market_single =
       await ftxApi.ftx_Get(env['URL_ftx'], 'markets/${env['Cross_ftx']}');
   //print(market_single);
-  final market = welcomeFromMap(json.encode(market_single.data));
-  data.increment_base = Decimal.parse(market.result.priceIncrement.toString());
-  data.increment = data.increment_base * Decimal.parse(env['distance_ord']);
-  data.ask_start = market.result.ask;
-  data.bid_start = market.result.bid;
-  data.type = market.result.type;
-  data.sizeIncrement = market.result.sizeIncrement.toString();
-  data.size_base =
-      Decimal.parse(env['size']) * Decimal.parse(data.sizeIncrement);
-  data.size_buy =
-      Decimal.parse(env['size']) * Decimal.parse(data.sizeIncrement);
-  data.size_sell =
-      Decimal.parse(env['size']) * Decimal.parse(data.sizeIncrement);
-  data.size_add =
-      Decimal.parse(env['size_add']) * Decimal.parse(data.sizeIncrement);
-  data.limit_order = data.increment * Decimal.parse(env['limit_order']);
-
-  //await Future<void>.delayed(Duration(milliseconds: 5000));
-  var wallet_balances =
-      await ftxApi.ftx_Get_Auth(env['URL_ftx'], 'wallet/balances');
-  //
-  data.map_limit = await prep_list_orderLimit(data.increment);
-  var txt = '   🔥🔥 FTX_GridBot_1777${versione} 🔥🔥\n';
-  txt += '\n';
-  txt += '   📉 Cross start: ${market.result.name} 📈\n';
-  txt += '\n';
-  //txt += '⌛️ account: ${data.}\n';
-  txt += '⌛️ time: ${DateTime.now().toUtc()}\n';
-  var i = 0;
-  while (i < wallet_balances.data['result'].length) {
-    txt +=
-        '💰 bilancio: ${wallet_balances.data['result'][i]['total']} ${wallet_balances.data['result'][i]['coin']}\n';
-
-    i++;
-  }
-  txt += '\n';
-  var currency;
-  if (data.type == 'spot') {
-    currency = market.result.baseCurrency.toString();
+  if (market_single == null) {
+    await Future<void>.delayed(Duration(milliseconds: 250));
+    market_single =
+        await ftxApi.ftx_Get(env['URL_ftx'], 'markets/${env['Cross_ftx']}');
   } else {
-    currency = 'USD';
-  }
+    final market = welcomeFromMap(json.encode(market_single.data));
+    data.increment_base =
+        Decimal.parse(market.result.priceIncrement.toString());
+    data.increment = data.increment_base * Decimal.parse(env['distance_ord']);
+    data.ask_start = market.result.ask;
+    data.bid_start = market.result.bid;
+    data.type = market.result.type;
+    data.sizeIncrement = market.result.sizeIncrement.toString();
+    data.size_base =
+        Decimal.parse(env['size']) * Decimal.parse(data.sizeIncrement);
+    data.size_buy =
+        Decimal.parse(env['size']) * Decimal.parse(data.sizeIncrement);
+    data.size_sell =
+        Decimal.parse(env['size']) * Decimal.parse(data.sizeIncrement);
+    data.size_add =
+        Decimal.parse(env['size_add']) * Decimal.parse(data.sizeIncrement);
+    data.limit_order = data.increment * Decimal.parse(env['limit_order']);
 
-  txt +=
-      'hai impostato una size di ${env['size']} che corrisponde a ${data.size_base} ${currency} per un totale di ${int.parse(env['n_order']) * 2} ordini (max ${int.parse(env['limit_order']) * 2})\n';
-  txt +=
-      'la distanza minima tra gli ordini è ${Decimal.parse(market.result.priceIncrement.toString())} e lo spread attuale è ${(market.result.ask - market.result.bid).toStringAsFixed(10)}\n';
-  txt +=
-      'la distanza impostata è ${data.increment} che corrisponde a ${env['distance_ord']} volte il minimo e ${data.increment.toDouble() / (market.result.ask - market.result.bid)} volte lo spread\n';
-  if (data.increment.toDouble() / (market.result.ask - market.result.bid) < 2) {
-    txt +=
-        '\n ⚠️⚠️ si consiglia di mantenere una distanza tra gli ordini superiore al doppio dello spread ⚠️⚠️\n';
-  }
-  if (env['trading'] == 'false') {
-    txt +=
-        'se le impostazioni ti soddisfano, attiva il trading sul file .env e riavviami 🤖\n';
-  }
-  if (env['trading'] == 'true') {
+    //await Future<void>.delayed(Duration(milliseconds: 5000));
+    var wallet_balances =
+        await ftxApi.ftx_Get_Auth(env['URL_ftx'], 'wallet/balances');
+    //
+    data.map_limit = await prep_list_orderLimit(data.increment);
+    var txt = '   🔥🔥 FTX_GridBot_1777${versione} 🔥🔥\n';
     txt += '\n';
-    txt += 'il trading 🤖 è ATTIVATO\n';
+    txt += '   📉 Cross start: ${market.result.name} 📈\n';
+    txt += '\n';
+    //txt += '⌛️ account: ${data.}\n';
+    txt += '⌛️ time: ${DateTime.now().toUtc()}\n';
+    var i = 0;
+    while (i < wallet_balances.data['result'].length) {
+      txt +=
+          '💰 bilancio: ${wallet_balances.data['result'][i]['total']} ${wallet_balances.data['result'][i]['coin']}\n';
 
-    txt += 'TO THE M🌘🌘N !!\n';
-    txt += '🚀🚀🚀 \n';
-  }
-  print(txt);
-  /*
+      i++;
+    }
+    txt += '\n';
+    var currency;
+    if (data.type == 'spot') {
+      currency = market.result.baseCurrency.toString();
+    } else {
+      currency = 'USD';
+    }
+
+    txt +=
+        'hai impostato una size di ${env['size']} che corrisponde a ${data.size_base} ${currency} per un totale di ${int.parse(env['n_order']) * 2} ordini (max ${int.parse(env['limit_order']) * 2})\n';
+    txt +=
+        'la distanza minima tra gli ordini è ${Decimal.parse(market.result.priceIncrement.toString())} e lo spread attuale è ${(market.result.ask - market.result.bid).toStringAsFixed(10)}\n';
+    txt +=
+        'la distanza impostata è ${data.increment} che corrisponde a ${env['distance_ord']} volte il minimo e ${data.increment.toDouble() / (market.result.ask - market.result.bid)} volte lo spread\n';
+    if (data.increment.toDouble() / (market.result.ask - market.result.bid) <
+        2) {
+      txt +=
+          '\n ⚠️⚠️ si consiglia di mantenere una distanza tra gli ordini superiore al doppio dello spread ⚠️⚠️\n';
+    }
+    if (env['trading'] == 'false') {
+      txt +=
+          'se le impostazioni ti soddisfano, attiva il trading sul file .env e riavviami 🤖\n';
+    }
+    if (env['trading'] == 'true') {
+      txt += '\n';
+      txt += 'il trading 🤖 è ATTIVATO\n';
+
+      txt += 'TO THE M🌘🌘N !!\n';
+      txt += '🚀🚀🚀 \n';
+    }
+
+    print(txt);
+    /*
   print('market name: ${market.result.name}');
   print('market ask: ${market.result.ask}');
   print('market bid: ${market.result.bid}');
@@ -165,6 +173,7 @@ Future funzione_market_init(ApiProvide ftxApi, PrimitiveWrapper data) async {
   print('map_limit: ${data.map_limit}');
   print('limit_order: ${data.limit_order}');
   */
+  }
 }
 
 Future funzione_market(ApiProvide ftxApi, PrimitiveWrapper data) async {
